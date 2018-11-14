@@ -7,7 +7,7 @@ public class LogOutController {
     {
         if (Token.tokenExists(token))
         {
-            Token.deleteToken(token);
+           token.deleteToken();
             return true;
         }
         else

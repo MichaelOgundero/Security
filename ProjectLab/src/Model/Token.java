@@ -1,6 +1,13 @@
 package Model;
 
+import Helper.DbConnect;
+
+import javax.xml.transform.Result;
 import java.security.SecureRandom;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class Token {
 
@@ -33,29 +40,74 @@ public class Token {
         this.email = email;
     }
 
-
-    private void addTokenToDataBase(String token, String email)
+    public void deleteToken()
     {
-        //DB connect add token to database
+        DbConnect db = new DbConnect();
+        Connection connection = db.connect();
+
+        PreparedStatement preparedStatement = null;
+        try {
+            preparedStatement = connection.prepareStatement("DELETE FROM token where gmail =?");
+            preparedStatement.setString(1,this.email);
+            preparedStatement.executeUpdate();
+        }catch (SQLException ex) {
+            System.out.println("Check failed (SQL CREATE STATEMENT FAILED)");
+        }
+    }
+
+    public void addTokenToDataBase()
+    {
+        DbConnect db = new DbConnect();
+        Connection connection = db.connect();
+
+        PreparedStatement preparedStatement = null;
+
+        try
+        {
+            preparedStatement = connection.prepareStatement("INSERT INTO token(gmail, token) VALUES (?,?)");
+            preparedStatement.setString(1,this.email);
+            preparedStatement.setString(2,this.token);
+            preparedStatement.executeUpdate();
+
+        }catch (SQLException ex) {
+        System.out.println("Check failed (SQL CREATE STATEMENT FAILED)");
+    }
+
     }
 
     public static boolean tokenExists(Token token)
     {
         //DB Connect
         // check in database
-        return false;
-    }
+        DbConnect db = new DbConnect();
+        Connection connection = db.connect();
 
-    public static void deleteToken(Token token)
-    {
-        if (tokenExists(token))
-        {
-            //DB connect
-            //delete from database
+        PreparedStatement preparedStatement = null;
+        int token_count=0;
+        try {
+            preparedStatement = connection.prepareStatement("SELECT count(token) as token_count FROM token WHERE gmail = ? AND token =?");
+            preparedStatement.setString(1, token.email);
+            preparedStatement.setString(2,token.token);
 
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next())
+            {
+                token_count =Integer.parseInt( resultSet.getString("token_count"));
+            }
+
+
+        }catch (SQLException ex) {
+            System.out.println("Check failed (SQL CREATE STATEMENT FAILED)");
         }
 
+        if (token_count ==0)
+            return false;
+        else
+            return true;
     }
+
+
 
 
     public static void checkExpiarationDate()

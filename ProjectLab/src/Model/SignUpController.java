@@ -10,15 +10,18 @@ public class SignUpController {
         // cela veut dire que je teste UserAuthentication.newAccountAuthorization(email) fel APIController
         if (UserAuthentication.newAccountAuthorization(email))
         {
+
             byte[] salt = Password.getNextSalt();
             char[] hashedPassword = Password.hash(password, salt);
 
             User user = new User(name, lastName, email, hashedPassword, salt);
             User.addNewUserToDataBase(user);
+
             return 1;
         }
         else
         {
+
             return -1;
         }
 

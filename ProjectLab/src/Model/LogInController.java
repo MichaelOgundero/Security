@@ -7,7 +7,10 @@ public class LogInController {
     {
         if (UserAuthentication.userAuthenticated(email, password) == true)
         {
-            return new Token(Token.nextToken(), email);
+            Token token = new Token(Token.nextToken(), email);
+            token.addTokenToDataBase();
+            return token;
+
         }
         else
         {

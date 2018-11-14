@@ -1,25 +1,21 @@
 import Helper.DbConnect;
+import Model.SignUpController;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class Main {
 
     public static void main(String[] args) {
 
-        DbConnect db = new DbConnect();
 
-        ResultSet resultSet =db.connect("SELECT * FROM users");
-        try {
-            while (resultSet.next())
-            {
-                System.out.println(resultSet.getString("email"));
-            }
-        }
-        catch (Exception e)
-        {
 
-        }
 
-        System.out.println("Hello World!");
+        SignUpController.signUp("ilefHammemi@gmail.com","khouloud".toCharArray(),"ilef","hammemi");
+
+
+
     }
 }
