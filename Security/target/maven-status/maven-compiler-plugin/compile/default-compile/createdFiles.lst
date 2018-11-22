@@ -1,0 +1,15 @@
+servlets\SignUpServlet.class
+servlets\testServlest.class
+sec\model\SignUpController.class
+servlets\UpdateScoreServlet.class
+servlets\AuthenticateServlet.class
+sec\model\Token.class
+sec\model\User.class
+sec\model\UserAuthentication.class
+sec\helper\DbConnect.class
+sec\model\Password.class
+servlets\LogInServlet.class
+servlets\LogOutServlet.class
+sec\model\LogInController.class
+servlets\ActiveUserServlet.class
+servlets\DeleteAccountServlet.class
