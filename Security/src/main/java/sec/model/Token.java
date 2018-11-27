@@ -2,6 +2,7 @@ package sec.model;
 
 import sec.helper.DbConnect;
 
+import javax.servlet.ServletException;
 import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -41,7 +42,7 @@ public class Token {
         return new String(buf);
     }
 
-    public Token(String token, String email)
+    public Token(String email, String token)
     {
         this.token = token;
         this.email = email;
@@ -49,12 +50,16 @@ public class Token {
 
     public static void deleteToken(String token)
     {
-        DbConnect db = new DbConnect();
-        Connection connection = db.connect();
+        Connection connection = null;
+        try {
+            connection = DbConnect.conn();
+        } catch (ServletException e) {
+            e.printStackTrace();
+        }
 
         PreparedStatement preparedStatement = null;
         try {
-            preparedStatement = connection.prepareStatement("DELETE FROM token where token =?");
+            preparedStatement = connection.prepareStatement("DELETE FROM tokens where token_value =?");
             preparedStatement.setString(1,token);
             preparedStatement.executeUpdate();
         }catch (SQLException ex) {
@@ -64,35 +69,44 @@ public class Token {
 
     public void addTokenToDataBase()
     {
-        DbConnect db = new DbConnect();
-        Connection connection = db.connect();
+        Connection connection = null;
+        try {
+            connection = DbConnect.conn();
+        } catch (ServletException e) {
+            e.printStackTrace();
+        }
 
         PreparedStatement preparedStatement = null;
 
         try
         {
-            preparedStatement = connection.prepareStatement("INSERT INTO token(gmail, token) VALUES (?,?)");
+            preparedStatement = connection.prepareStatement("INSERT INTO tokens(user_email, token_value) VALUES (?,?)");
+
             preparedStatement.setString(1,this.email);
             preparedStatement.setString(2,this.token);
+
             preparedStatement.executeUpdate();
 
         }catch (SQLException ex) {
-            System.out.println("Check failed (SQL CREATE STATEMENT FAILED)");
+            System.out.println("Check failed (SQL INSERT STATEMENT FAILED)");
         }
 
     }
 
     public static boolean tokenExists(String token)
     {
-        //DB Connect
-        // check in database
-        DbConnect db = new DbConnect();
-        Connection connection = db.connect();
+
+        Connection connection = null;
+        try {
+            connection = DbConnect.conn();
+        } catch (ServletException e) {
+            e.printStackTrace();
+        }
 
         PreparedStatement preparedStatement = null;
         int token_count=0;
         try {
-            preparedStatement = connection.prepareStatement("SELECT count(token) as token_count FROM token WHERE  token =?");
+            preparedStatement = connection.prepareStatement("SELECT count(token_value) as token_count FROM tokens WHERE  token_value =?");
             preparedStatement.setString(1, token);
 
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -101,8 +115,6 @@ public class Token {
             {
                 token_count =Integer.parseInt( resultSet.getString("token_count"));
             }
-
-
         }catch (SQLException ex) {
             System.out.println("Check failed (SQL CREATE STATEMENT FAILED)");
         }
@@ -113,21 +125,60 @@ public class Token {
             return true;
     }
 
+
+    public static boolean userExists(String email)
+    {
+
+        Connection connection = null;
+        try {
+            connection = DbConnect.conn();
+        } catch (ServletException e) {
+            e.printStackTrace();
+        }
+
+        PreparedStatement preparedStatement = null;
+        int user_email_count=0;
+        try {
+            preparedStatement = connection.prepareStatement("SELECT count(user_email) as user_email_count FROM tokens WHERE  user_email =?");
+            preparedStatement.setString(1, email);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next())
+            {
+                user_email_count =Integer.parseInt( resultSet.getString("user_email_count"));
+            }
+        }catch (SQLException ex) {
+            System.out.println("Check failed (SQL CREATE STATEMENT FAILED)");
+        }
+
+        if (user_email_count ==0)
+            return false;
+        else
+            return true;
+    }
+
+
     public static String getEmailOfToken(String token)
     {
-        DbConnect db = new DbConnect();
-        Connection connection = db.connect();
+        Connection connection = null;
+        try {
+            connection = DbConnect.conn();
+        } catch (ServletException e) {
+            e.printStackTrace();
+        }
+
         String email = "";
         PreparedStatement preparedStatement = null;
         try {
-            preparedStatement = connection.prepareStatement("SELECT gmail FROM token WHERE  token =?");
+            preparedStatement = connection.prepareStatement("SELECT user_email FROM tokens WHERE  token_value =?");
             preparedStatement.setString(1, token);
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next())
             {
-                email = resultSet.getString("gmail");
+                email = resultSet.getString("user_email");
             }
 
             return email;

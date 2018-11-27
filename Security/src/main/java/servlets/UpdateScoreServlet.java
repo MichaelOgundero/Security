@@ -4,6 +4,7 @@ import com.google.appengine.repackaged.com.google.api.client.http.HttpStatusCode
 import com.google.gson.Gson;
 import sec.model.Token;
 import sec.model.User;
+import sec.model.UserAuthentication;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -18,23 +19,26 @@ import java.io.PrintWriter;
 
 public class UpdateScoreServlet extends HttpServlet {
 
+    //userName instead of token
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
         PrintWriter out = resp.getWriter();
-        String token = req.getParameter("token");
+
+        String email = req.getParameter("email");
         int newScore = Integer.parseInt( req.getParameter("newScore"));
 
         Gson gson = new Gson();
-        if(Token.tokenExists(token)==true)
+
+        if(UserAuthentication.newAccountAuthorization(email)==false)
         {
-            User.updateScore(Token.getEmailOfToken(token),newScore);
-            out.print("Success: "+HttpStatusCodes.STATUS_CODE_OK);
+            User.updateScore(email,newScore);
+            out.print(gson.toJson("Success: "+HttpStatusCodes.STATUS_CODE_OK));
         }
         else
         {
-            out.print("Error: "+HttpStatusCodes.STATUS_CODE_UNAUTHORIZED);
+            out.print(gson.toJson("Error: "+HttpStatusCodes.STATUS_CODE_UNAUTHORIZED));
         }
 
     }

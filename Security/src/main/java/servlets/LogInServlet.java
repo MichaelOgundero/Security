@@ -2,7 +2,10 @@ package servlets;
 
 import com.google.appengine.repackaged.com.google.api.client.http.HttpStatusCodes;
 import com.google.gson.Gson;
+import sec.helper.DbConnect;
+import sec.model.Password;
 import sec.model.Token;
+import sec.model.User;
 import sec.model.UserAuthentication;
 
 import javax.servlet.ServletException;
@@ -12,6 +15,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Base64;
 
 
 @WebServlet(name = "login", urlPatterns = "/login")
@@ -29,30 +37,40 @@ public class LogInServlet extends HttpServlet{
         boolean responseFlag;
         Gson gson = new Gson();
         String json = "";
+
         if(UserAuthentication.newAccountAuthorization(email)==false)
         {
-            responseFlag =UserAuthentication.userAuthenticated(email, password);
-            if(responseFlag == true )
+            if(Token.userExists(email)==false)
             {
+                responseFlag =UserAuthentication.userAuthenticated(email, password);
 
-                Token token = new Token(email, Token.nextToken());
-                while(Token.tokenExists(token.getToken())==true)
+                if(responseFlag == true )
                 {
-                    token = new Token(email, Token.nextToken());
+
+                    Token token = new Token(email, Token.nextToken());
+                    while(Token.tokenExists(token.getToken())==true)
+                    {
+                        token = new Token(email, Token.nextToken());
+                    }
+                    token.addTokenToDataBase();
+                    json = gson.toJson(token);
+                    out.print(json);
                 }
-                token.addTokenToDataBase();
-                json = gson.toJson(token.getToken());
-                out.print(json);
+                else
+                {
+                    json = gson.toJson(HttpStatusCodes.STATUS_CODE_UNAUTHORIZED);
+                    out.print(gson.toJson("Error"+json));
+                }
             }
             else
             {
                 json = gson.toJson(HttpStatusCodes.STATUS_CODE_UNAUTHORIZED);
-                out.print("Error: "+json);
+                out.print(gson.toJson("Error: "+json));
             }
         }
         else
         {
-            json = gson.toJson(HttpStatusCodes.STATUS_CODE_NOT_FOUND);
+            json = gson.toJson(HttpStatusCodes.STATUS_CODE_UNAUTHORIZED);
             out.print("Error: "+json);
         }
 

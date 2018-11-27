@@ -1,6 +1,7 @@
 package servlets;
 
 import com.google.appengine.repackaged.com.google.api.client.http.HttpStatusCodes;
+import com.google.gson.Gson;
 import sec.model.User;
 import sec.model.UserAuthentication;
 
@@ -24,12 +25,15 @@ public class DeleteAccountServlet extends HttpServlet {
         String email = req.getParameter("email");
         String password = req.getParameter("password");
 
+        Gson gson = new Gson();
+
         if (UserAuthentication.newAccountAuthorization(email)==false) {
 
-            if(User.checkPassword(email,password)==true)
+
+            if(UserAuthentication.userAuthenticated(email, password)==true)
             {
                 User.deleteAccount(email);
-                out.print("Error: "+HttpStatusCodes.STATUS_CODE_OK);
+                out.print(gson.toJson( "Success: "+HttpStatusCodes.STATUS_CODE_OK));
             }
             else
             {
@@ -38,7 +42,7 @@ public class DeleteAccountServlet extends HttpServlet {
         }
         else
         {
-            out.print("Error: "+HttpStatusCodes.STATUS_CODE_NOT_FOUND);
+            out.print("Error: "+HttpStatusCodes.STATUS_CODE_UNAUTHORIZED);
         }
     }
 }

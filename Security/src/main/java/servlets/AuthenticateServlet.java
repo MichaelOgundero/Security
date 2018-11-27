@@ -16,6 +16,7 @@ import java.io.PrintWriter;
 @WebServlet(name = "authenticate", urlPatterns = "/authenticate")
 
 public class AuthenticateServlet extends HttpServlet {
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
@@ -26,16 +27,15 @@ public class AuthenticateServlet extends HttpServlet {
         String token = req.getParameter("token");
 
         Gson gson = new Gson();
-        String json = "";
+
         if (Token.tokenExists(token)==false)
         {
-            json = gson.toJson(HttpStatusCodes.STATUS_CODE_NOT_FOUND);
-            out.print (json);
+
+            out.print (gson.toJson("Error: "+HttpStatusCodes.STATUS_CODE_NOT_FOUND));
         }
         else
         {
-
-            out.print( gson.toJson(Token.getEmailOfToken(token)));
+            out.print( gson.toJson("email: "+Token.getEmailOfToken(token)));
         }
     }
 }

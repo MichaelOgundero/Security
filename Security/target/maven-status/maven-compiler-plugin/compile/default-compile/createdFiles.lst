@@ -1,6 +1,5 @@
 servlets\SignUpServlet.class
 servlets\testServlest.class
-sec\model\SignUpController.class
 servlets\UpdateScoreServlet.class
 servlets\AuthenticateServlet.class
 sec\model\Token.class

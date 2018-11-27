@@ -2,10 +2,12 @@ package sec.model;
 
 import sec.helper.DbConnect;
 
+import javax.servlet.ServletException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Base64;
 
 public class UserAuthentication {
 
@@ -14,30 +16,35 @@ public class UserAuthentication {
     public static boolean userAuthenticated(String email, String password)
     {
 
-        DbConnect db = new DbConnect();
-        Connection connection = db.connect();
+        Connection connection = null;
+        try {
+            connection = DbConnect.conn();
+        } catch (ServletException e) {
+            e.printStackTrace();
+        }
+
         PreparedStatement preparedStatement = null;
-        char[] user_password = null;
-        byte[]user_salt = null;
+        String user_password = null;
+        byte[] user_salt = null;
         try
         {
-            preparedStatement = connection.prepareStatement("SELECT password, salt FROM users WHERE gmail =? ");
+            preparedStatement = connection.prepareStatement("SELECT password, salt FROM users WHERE email =? ");
             preparedStatement.setString(1, email);
 
             ResultSet resultSet =  preparedStatement.executeQuery();
             while (resultSet.next())
             {
-                user_password = resultSet.getString("password").toCharArray();
-                user_salt = resultSet.getString("salt").getBytes();
+                user_password = resultSet.getString("password");
+                user_salt = Base64.getDecoder().decode(resultSet.getString("salt").getBytes());
             }
         }
         catch (SQLException ex) {
             System.out.println("Check failed (SQL CREATE STATEMENT FAILED)");
         }
 
-        char[] passwordToCheck = password.toCharArray();
+        String passwordToCheck =Base64.getEncoder().encodeToString( (new String(Password.hash(password.toCharArray(), user_salt))).getBytes());
 
-        if(Password.isExpectedPassword(passwordToCheck, user_salt, user_password))
+        if(passwordToCheck.equals(user_password))
         {
             return true;
         }
@@ -56,24 +63,22 @@ public class UserAuthentication {
     }
 
 
+    //registration
     public static boolean newAccountAuthorization(String email)
     {
-        //DB connection
-        //SELECT count(email) FROM users
-        //WHERE email = 'email'
-        // if count(email) == 0
-        //return true;
-        //else return false;
 
-        DbConnect db = new DbConnect();
-
-        Connection connection = db.connect();
+        Connection connection = null;
+        try {
+            connection = DbConnect.conn();
+        } catch (ServletException e) {
+            e.printStackTrace();
+        }
 
         PreparedStatement preparedStatement=null;
         ResultSet result=null;
         int count=0;
         try {
-            preparedStatement=connection.prepareStatement("SELECT count(gmail) AS boo FROM users WHERE gmail=?;");
+            preparedStatement=connection.prepareStatement("SELECT count(email) AS boo FROM users WHERE email=?;");
 
             preparedStatement.setString(1,email);
             result=preparedStatement.executeQuery();

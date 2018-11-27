@@ -2,6 +2,7 @@ package servlets;
 
 import com.google.appengine.repackaged.com.google.api.client.http.HttpStatusCodes;
 import com.google.gson.Gson;
+import sec.helper.DbConnect;
 import sec.model.Password;
 import sec.model.Token;
 import sec.model.User;
@@ -14,6 +15,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Connection;
+import java.util.Base64;
 
 
 @WebServlet(name = "signup", urlPatterns = "/signup")
@@ -26,19 +29,27 @@ public class SignUpServlet extends HttpServlet {
 
         String email = req.getParameter("email");
         String name = req.getParameter("name");
-        String lastName = req.getParameter("lastName");
+        String lastName = req.getParameter("last_name");
         String password = req.getParameter("password");
+
         Gson gson = new Gson();
         String json = "";
         if (UserAuthentication.newAccountAuthorization(email)==true)
         {
-            User.addNewUserToDataBase(new User(name,lastName,email,password.toCharArray(), Password.getNextSalt()));
-            Token token = new Token(email, Token.nextToken());
-            token.addTokenToDataBase();
-            json = gson.toJson(token);
-            out.print( json);
+
+
+             User user = new User(name, lastName, email, password.toCharArray(), Password.getNextSalt());
+
+             User.addNewUserToDataBase(user);
+
+             Token token = new Token(email, Token.nextToken());
+
+             token.addTokenToDataBase();
+             json = gson.toJson(token);
+             out.print( json);
         }
-        out.print("Error: 400 email already exist");
+        else
+        out.print(gson.toJson("Error: "+HttpStatusCodes.STATUS_CODE_UNAUTHORIZED));
     }
 
 }

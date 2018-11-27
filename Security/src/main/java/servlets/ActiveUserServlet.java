@@ -1,4 +1,5 @@
 package servlets;
+import com.google.appengine.repackaged.com.google.api.client.http.HttpStatusCodes;
 import com.google.gson.Gson;
 import sec.model.User;
 
@@ -24,6 +25,7 @@ public class ActiveUserServlet extends HttpServlet {
         Gson gson = new Gson();
 
         out.print(gson.toJson(User.activeUsers()));
+
 
     }
 }

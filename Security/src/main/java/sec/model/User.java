@@ -2,12 +2,14 @@ package sec.model;
 
 import sec.helper.DbConnect;
 
+import javax.servlet.ServletException;
 import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 public class User {
@@ -18,6 +20,16 @@ public class User {
     int score;
 
     private SecureRandom random ;
+
+    public char[] getPassword()
+    {
+        return password;
+    }
+
+    public byte[] getSalt()
+    {
+        return salt;
+    }
 
     public User(String name, String lastName,String email, char[] password, byte[] salt)
     {
@@ -38,59 +50,78 @@ public class User {
         this.score = score;
     }
 
-    public static void addNewUserToDataBase(User user){
+    public static void addNewUserToDataBase( User user) {
         //DB connection
         //load user into database
-        DbConnect db = new DbConnect();
+        Connection connection = null;
+        try {
 
-        Connection connection = db.connect();
+            connection = DbConnect.conn();
 
+        }
+        catch(ServletException ex) {
+            System.out.println("SQL Error: " + ex.getMessage());
+        }
         PreparedStatement preparedStatement=null;
 
         try {
-            preparedStatement=connection.prepareStatement("INSERT INTO users(gmail, password, salt)VALUES(?,?,?)");
+
+            preparedStatement=connection.prepareStatement("INSERT INTO users(email, password, salt)VALUES(?,?,?)");
 
             preparedStatement.setString(1,user.email);
-            preparedStatement.setString(2,new String(user.password));
-            preparedStatement.setString(3,new String(user.salt));
+            String temPass = new String( Password.hash(user.password, user.salt));
+            preparedStatement.setString(2,Base64.getEncoder().encodeToString(temPass.getBytes()));
+            preparedStatement.setString(3, Base64.getEncoder().encodeToString(user.salt));
 
             preparedStatement.executeUpdate();
 
-            preparedStatement = connection.prepareStatement("INSERT INTO user_information(gmail, name, last_name)VALUES (?,?,?)");
+            preparedStatement = connection.prepareStatement("INSERT INTO user_Information(user_email, user_name, last_name, score) VALUES(?,?,?,?)");
 
             preparedStatement.setString(1,user.email);
             preparedStatement.setString(2, user.name);
             preparedStatement.setString(3,user.lastName);
+            preparedStatement.setInt(4,0);
 
             preparedStatement.executeUpdate();
 
+            connection.close();
         } catch (SQLException ex) {
-            System.out.println("Check failed (SQL CREATE STATEMENT FAILED");
+            System.out.println("SQL Error: " + ex.getMessage());
         }
 
 
     }
+
+
 
     //DELETES FROM users, user_information and token tables
     public static void deleteAccount(String email)
     {
-        DbConnect db = new DbConnect();
-
-        Connection connection = db.connect();
+        Connection connection = null;
+        try {
+            connection = DbConnect.conn();
+        } catch (ServletException e) {
+            e.printStackTrace();
+        }
 
         PreparedStatement preparedStatement=null;
 
         try {
-            preparedStatement = connection.prepareStatement("DELETE FROM users WHERE gmail = ?");
+            preparedStatement = connection.prepareStatement("DELETE FROM tokens WHERE user_email = ?");
             preparedStatement.setString(1,email);
             preparedStatement.executeUpdate();
 
-            preparedStatement = connection.prepareStatement("DELETE FROM user_information WHERE gmail = ?");
+
+            preparedStatement = connection.prepareStatement("DELETE FROM user_Information WHERE user_email = ?");
             preparedStatement.setString(1,email);
             preparedStatement.executeUpdate();
-            preparedStatement = connection.prepareStatement("DELETE FROM token WHERE gmail = ?");
+
+            preparedStatement = connection.prepareStatement("DELETE FROM users WHERE email = ?");
             preparedStatement.setString(1,email);
             preparedStatement.executeUpdate();
+
+
+
 
         } catch (SQLException ex) {
             System.out.println("Check failed (SQL CREATE STATEMENT FAILED");
@@ -99,16 +130,19 @@ public class User {
     }
 
 
-    private static byte[] getUserSalt(String email) {
+    public static byte[] getUserSalt(String email) {
 
-        DbConnect db = new DbConnect();
-
-        Connection connection = db.connect();
+        Connection connection = null;
+        try {
+            connection = DbConnect.conn();
+        } catch (ServletException e) {
+            e.printStackTrace();
+        }
         byte[] user_salt = null;
         PreparedStatement preparedStatement=null;
 
         try {
-            preparedStatement = connection.prepareStatement("SELECT salt FROM users WHERE gmail = ?");
+            preparedStatement = connection.prepareStatement("SELECT salt FROM users WHERE email = ?");
             preparedStatement.setString(1, email);
 
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -129,14 +163,17 @@ public class User {
 
     public static boolean checkPassword(String email, String passedPassword)
     {
-        DbConnect db = new DbConnect();
-
-        Connection connection = db.connect();
+        Connection connection = null;
+        try {
+            connection = DbConnect.conn();
+        } catch (ServletException e) {
+            e.printStackTrace();
+        }
         char[] real_password = null;
         PreparedStatement preparedStatement=null;
 
         try {
-            preparedStatement = connection.prepareStatement("SELECT salt FROM users WHERE gmail = ?");
+            preparedStatement = connection.prepareStatement("SELECT salt FROM users WHERE email = ?");
             preparedStatement.setString(1, email);
 
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -165,36 +202,42 @@ public class User {
     }
 
 
-    public static List<User> activeUsers()
+    public static ArrayList<User> activeUsers()
     {
         ArrayList<String> activeUsersEmails= new ArrayList<String>();
         ArrayList<User> activeUsers = new ArrayList<User>();
-        DbConnect db = new DbConnect();
+        ArrayList<String> ii = new ArrayList<String>();
 
-        Connection connection = db.connect();
+        Connection connection = null;
+        try {
+            connection = DbConnect.conn();
+        } catch (ServletException e) {
+            e.printStackTrace();
+        }
 
         PreparedStatement preparedStatement=null;
         try {
-            preparedStatement = connection.prepareStatement("SELECT gmail FROM token");
+            preparedStatement = connection.prepareStatement("SELECT user_email FROM tokens");
             ResultSet resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next())
             {
-                activeUsersEmails.add(resultSet.getString("gmail"));
+                activeUsersEmails.add(resultSet.getString("user_email"));
             }
 
             for (String email: activeUsersEmails) {
-                preparedStatement = connection.prepareStatement("select * from user_information where email = ?");
+                preparedStatement = connection.prepareStatement("SELECT * FROM user_Information WHERE user_email = ?");
                 preparedStatement.setString(1, email);
 
                 resultSet = preparedStatement.executeQuery();
 
                 while (resultSet.next())
                 {
-                    activeUsers.add(new User(resultSet.getString("name"), resultSet.getString("lastName"),
-                            resultSet.getString("email"), Integer.parseInt(resultSet.getString("score"))));
-                }
+                    activeUsers.add(new User(resultSet.getString("user_name"), resultSet.getString("last_name"),
+                            resultSet.getString("user_email"), resultSet.getInt("score")));
+                    ii.add(resultSet.getString("user_name"));
 
+                }
             }
 
         } catch (SQLException ex) {
@@ -210,14 +253,17 @@ public class User {
 
     public static void updateScore(String email,int newScore)
     {
-        DbConnect db = new DbConnect();
-
-        Connection connection = db.connect();
+        Connection connection = null;
+        try {
+            connection = DbConnect.conn();
+        } catch (ServletException e) {
+            e.printStackTrace();
+        }
 
         PreparedStatement preparedStatement=null;
 
         try {
-            preparedStatement = connection.prepareStatement("UPDATE user_information set score =? where gmail=?");
+            preparedStatement = connection.prepareStatement("UPDATE user_Information SET score =? WHERE user_email=?");
             preparedStatement.setInt(1,newScore);
             preparedStatement.setString(2, email);
 

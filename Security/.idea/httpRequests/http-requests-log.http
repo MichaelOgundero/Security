@@ -1,3 +1,85 @@
+GET https://security-dot-training-project-lab.appspot.com/test
+Accept: */*
+Cache-Control: no-cache
+
+###
+
+GET https://security-dot-training-project-lab.appspot.com/test
+Accept: */*
+Cache-Control: no-cache
+
+<> 2018-11-26T075030.200.json
+
+###
+
+GET https://security-dot-training-project-lab.appspot.com/test
+Accept: */*
+Cache-Control: no-cache
+
+<> 2018-11-26T073851.200.json
+
+###
+
+GET https://security-dot-training-project-lab.appspot.com/test
+Accept: */*
+Cache-Control: no-cache
+
+<> 2018-11-26T073405.200.json
+
+###
+
+GET https://security-dot-training-project-lab.appspot.com/test
+Accept: */*
+Cache-Control: no-cache
+
+<> 2018-11-26T072951.500.html
+
+###
+
+GET https://security-dot-training-project-lab.appspot.com/test
+Accept: */*
+Cache-Control: no-cache
+
+<> 2018-11-26T072415.500.html
+
+###
+
+GET https://security-dot-training-project-lab.appspot.com/test
+Accept: */*
+Cache-Control: no-cache
+
+<> 2018-11-26T061958.200.json
+
+###
+
+GET https://security-dot-training-project-lab.appspot.com/test
+Accept: */*
+Cache-Control: no-cache
+
+<> 2018-11-26T060148.200.json
+
+###
+
+GET https://security-dot-training-project-lab.appspot.com/test
+Accept: */*
+Cache-Control: no-cache
+
+<> 2018-11-26T055655.500.html
+
+###
+
+GET http://localhost:8080/resources/test
+Accept: */*
+Cache-Control: no-cache
+
+###
+
+GET http://localhost:8080/resources
+Accept: */*
+Cache-Control: no-cache
+
+###
+
 GET http://localhost:8080/resources/test
 Accept: */*
 Cache-Control: no-cache
